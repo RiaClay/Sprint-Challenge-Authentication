@@ -18,19 +18,24 @@ const UserSchema = Schema({
 });
 
 UserSchema.pre('save', function(next) {
-  bcrypt.hash(this.password, SALT_ROUNDS, (err, hash) => {
+  bcrypt.hash(this.password, 11, (err, hash) => {
     if (err) {
       next(err);
-    }
+    } else {
+      this.password = hash;
 
-    this.password = hash;
-
-    next();
+      next();
+    }  
   })
 });
 
 UserSchema.methods.checkPassword = function(plainTextPW, callBack) {
-  return bcrypt.compare(plainTextPW, this.password);
+  bcrypt.compare(plainTextPW, this.password, function(err, isValid) {
+    if (err) {
+      return callBack(err);
+    }
+      callBack(null, isValid);
+  })
 };
 
 module.exports = mongoose.model('User', UserSchema);
